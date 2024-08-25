@@ -4,7 +4,7 @@ from sqlalchemy import Table
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import DeclarativeBase, Mapper
 
-from pg_rls import Policy
+from pg_rls import Policy, PolicyType
 
 
 class RlsData:

@@ -1,4 +1,4 @@
-from typing import Type, List
+from typing import Type, List, Optional
 
 from sqlalchemy import Table
 from sqlalchemy.event import listens_for
@@ -13,12 +13,30 @@ class RlsData:
         self.policies: List[Policy] = []
 
 
-def add_rls(Base: Type[DeclarativeBase], default_active: bool = True):
+def rls_base(Base: Type[DeclarativeBase], default_active: bool = True):
     class WithRls(Base):
-        rls = RlsData(default_active)
+        __rls__ = RlsData(default_active)
     return WithRls
 
     @listens_for(WithRls, 'after_configured')
     def receive_mapper_configured(mapper: Mapper, class_: Type[WithRls]):
         table: Table = mapper.mapped_table()
-        table.info.setdefault('rls', class_.rls)
+        table.info.setdefault('rls', getattr(class_, '__rls__'))
+
+
+def rls(enabled=True, policies: Optional[List[Policy]] = None):
+    def wrapper(Model: Type[DeclarativeBase]):
+        Model.__rls__ = RlsData(enabled)
+        Model.__rls__.policies = policies or []
+        return Model
+    return wrapper
+
+
+def policy(pol: Policy):
+    def wrapper(Model: Type[DeclarativeBase]):
+        if not Model.__rls__:
+            Model.__rls__ = RlsData(True)
+        Model.__rls__.policies.append(pol)
+        return Model
+    return wrapper
+

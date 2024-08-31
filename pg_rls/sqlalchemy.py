@@ -32,6 +32,15 @@ def rls(enabled=True, policies: Optional[List[Policy]] = None):
     return wrapper
 
 
+def rls_for_table(enabled=True, policies: Optional[List[Policy]] = None):
+    def wrapper(table: Table):
+        data = RlsData(enabled)
+        data.policies = policies or []
+        table.info.setdefault('rls', data)
+        return Table
+    return wrapper
+
+
 def policy(pol: Policy):
     def wrapper(Model: Type[DeclarativeBase]):
         if not Model.__rls__:

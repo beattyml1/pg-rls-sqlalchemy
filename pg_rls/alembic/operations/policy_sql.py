@@ -4,16 +4,17 @@ from pg_rls import Policy
 
 
 class PolicySql:
-    def __init__(self, policy: Policy, table: Table):
+    def __init__(self, policy: Policy, table_name: str, schema: str):
         self.policy = policy
-        self.table = table
+        self.table_name = table_name
+        self.schema = schema
     
     def qualify(self, name):
-        return f"{self.table.schema}.{name}"
+        return f"{self.schema}.{name}"
     
     @property
     def tab(self):
-        return self.qualify(self.table.name)
+        return self.qualify(self.table_name)
     
     @property
     def pol(self):
@@ -34,10 +35,10 @@ class PolicySql:
 
     # Fragments
     def _create_fragment(self):
-        return f"create policy {self.table.schema}.{self.pol} on {self.table.schema}.{self.tab}\n"
+        return f"create policy {self.pol} on {self.tab}\n"
 
     def _alter_fragment(self):
-        return f"alter policy {self.table.schema}.{self.pol} on {self.table.schema}.{self.tab}\n"
+        return f"alter policy {self.pol} on {self.tab}\n"
 
     def _as_fragment(self):
         return f"as {self.policy.as_}\n" if self.policy.as_ else ""
@@ -48,5 +49,5 @@ class PolicySql:
     def _with_check_fragment(self):
         return f"with check {self.policy.with_check}\n" if self.policy.with_check else ""
 
-    def _using_fragment(self: Policy):
+    def _using_fragment(self):
         return f"using {self.policy.using}\n" if self.policy.using else ""

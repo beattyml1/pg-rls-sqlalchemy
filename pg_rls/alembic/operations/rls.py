@@ -39,3 +39,19 @@ class DisableRlsOp(MigrateOperation):
     def reverse(self):
         # only needed to support autogenerate
         return EnableRlsOp(self.sequence_name, schema=self.schema)
+
+@Operations.implementation_for(EnableRlsOp)
+def enable_rls(operations, operation: EnableRlsOp):
+    if operation.schema is not None:
+        name = "%s.%s" % (operation.schema, operation.table_name)
+    else:
+        name = operation.table_name
+    operations.execute("ALTER TABLE %s ENABLE ROW LEVEL SECURITY;" % name)
+
+@Operations.implementation_for(DisableRlsOp)
+def disable_rls(operations, operation: DisableRlsOp):
+    if operation.schema is not None:
+        name = "%s.%s" % (operation.schema, operation.table_name)
+    else:
+        name = operation.table_name
+    operations.execute("ALTER TABLE %s DISABLE ROW LEVEL SECURITY;" % name)

@@ -6,7 +6,7 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    envrionment: Test
+    # envrionment: Test  # Apparently GitHub doesn't have there shit together and you can't use environments with reusable actions like checkout which are needed for all build jobs, dumb
     steps:
       - uses: actions/checkout@v4
       - name: Build and publish to pypi

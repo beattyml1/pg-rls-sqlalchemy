@@ -4,7 +4,15 @@ Work in progress. Support for Postgres Row Level Security (RLS) include Postgres
 
 ## Installation
 
-No package as yet
+```shell
+pip install pg-rls-sqlalchemy
+```
+
+OR 
+
+```shell
+poetry add pg-rls-sqlalchemy
+```
 
 ## Usage
 

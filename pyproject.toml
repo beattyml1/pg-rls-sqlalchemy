@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pg-rls-sqlalchemy"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Matthew Beatty <beattyml1@gmail.com>"]
 readme = "README.md"

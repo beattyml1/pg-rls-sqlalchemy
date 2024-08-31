@@ -1,5 +1,8 @@
 from enum import Enum
 
+from alembic_utils.pg_policy import PGPolicy
+from sqlalchemy import Table, BinaryExpression
+
 
 class PolicyType(Enum):
     PERMISSIVE = 'PERMISSIVE'
@@ -15,10 +18,17 @@ class PolicyCommands(Enum):
 
 
 class Policy:
-    def __init__(self, name: str, as_: PolicyType, for_: PolicyCommands, using: str = None, with_check: str = None):
+    def __init__(
+            self,
+            name: str,
+            as_: PolicyType = PolicyType.PERMISSIVE,
+            for_: PolicyCommands = PolicyCommands.ALL,
+            using: str | BinaryExpression | None = None,
+            with_check: str | BinaryExpression | None = None
+    ):
         self.name = name
-        self.with_check = with_check
-        self.using = using
+        self.with_check = str(with_check)
+        self.using = str(using)
         self.for_ = for_
         self.as_ = as_
 

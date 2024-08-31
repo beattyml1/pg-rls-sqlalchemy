@@ -1,18 +1,19 @@
 [tool.poetry]
-name = "pg-rls-sqlalchemy"
+name = "pgalchemy"
 version = "0.1.2"
 description = ""
 authors = ["Matthew Beatty <beattyml1@gmail.com>"]
 readme = "README.md"
 include = [{path="README.md"}, {path="LICENSE"}]
 packages = [
-    { include = "pg_rls", from = "." },
+    { include = "pgalchemy", from = "." },
 ]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 sqlalchemy = "^2.0.32"
 alembic = "^1.13.2"
+alembic-utils = "^0.8.4"
 
 
 [build-system]

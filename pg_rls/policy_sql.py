@@ -1,6 +1,6 @@
 from sqlalchemy import Table
 
-from pg_rls import Policy
+from .policy import Policy
 
 
 class PolicySql:
@@ -51,3 +51,6 @@ class PolicySql:
 
     def _using_fragment(self):
         return f"using {self.policy.using}\n" if self.policy.using else ""
+
+    def definition_sql(self):
+        return self._as_fragment() + self._from_fragment() + self._using_fragment() + self._with_check_fragment()

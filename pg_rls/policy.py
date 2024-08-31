@@ -1,5 +1,8 @@
 from enum import Enum
 
+from alembic_utils.pg_policy import PGPolicy
+from sqlalchemy import Table
+
 
 class PolicyType(Enum):
     PERMISSIVE = 'PERMISSIVE'

@@ -13,6 +13,7 @@ packages = [
 python = "^3.11"
 sqlalchemy = "^2.0.32"
 alembic = "^1.13.2"
+alembic-utils = "^0.8.4"
 
 
 [build-system]

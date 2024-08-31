@@ -1,10 +1,12 @@
 from typing import Type, List, Optional
 
+from alembic_utils.pg_policy import PGPolicy
 from sqlalchemy import Table
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import DeclarativeBase, Mapper
 
-from pg_rls import Policy, PolicyType
+from .policy import Policy, PolicyType
+from .policy_sql import PolicySql
 
 
 class RlsData:
@@ -16,12 +18,17 @@ class RlsData:
 def rls_base(Base: Type[DeclarativeBase], default_active: bool = True):
     class WithRls(Base):
         __rls__ = RlsData(default_active)
-    return WithRls
 
     @listens_for(WithRls, 'after_configured')
     def receive_mapper_configured(mapper: Mapper, class_: Type[WithRls]):
         table: Table = mapper.mapped_table()
-        table.info.setdefault('rls', getattr(class_, '__rls__'))
+        rls = getattr(class_, '__rls__')
+        table.info.setdefault('rls', rls)
+        if rls.active:
+            for policy in rls.policies:
+                attach_policy(policy, table)
+
+    return WithRls
 
 
 def rls(enabled=True, policies: Optional[List[Policy]] = None):
@@ -49,3 +56,11 @@ def policy(pol: Policy):
         return Model
     return wrapper
 
+
+def attach_policy(policy: Policy, table: Table):
+    return PGPolicy(
+        on_entity=table.name,
+        schema=table.schema,
+        signature=policy.name,
+        definition=PolicySql(policy, table.name, table.schema)
+    )

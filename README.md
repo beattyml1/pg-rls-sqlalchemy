@@ -1,6 +1,12 @@
 # pg-rls-sqlalchemy
 
-Work in progress. Support for Postgres Row Level Security (RLS) include Postgres Policy in SQL Alchemy and Alembic.
+Work in progress. 
+
+SQLAlchemy and Alembic support for Postgres features like:
+- Row Level Security (RLS)
+- Policies
+
+Built on top of alembic_utils but provides a more usable interface and a few missing features
 
 ## Installation
 

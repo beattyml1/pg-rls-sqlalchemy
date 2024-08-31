@@ -2,7 +2,7 @@ from alembic.autogenerate import comparators
 from alembic.operations import Operations, MigrateOperation
 from sqlalchemy import Table
 
-from pg_rls.sqlalchemy import RlsData
+from ..rls import RlsData
 from .operations import EnableRlsOp, DisableRlsOp
 from .. import Policy
 

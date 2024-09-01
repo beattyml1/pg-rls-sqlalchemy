@@ -1,30 +1,44 @@
-from typing import Callable
+from typing import Callable, Iterable, get_type_hints, get_origin
 
 from alembic_utils.pg_function import PGFunction
 import inspect
 
-from pgalchemy.expressions import _try_get_sql_from_path, _try_get_sql_from_returned_expression, \
-    _try_get_return_from_annotation, _try_get_type_from_returned_expression
-from pgalchemy.types import format_type
+from sqlalchemy import BinaryExpression, Select
+
+from pgalchemy.expressions import _try_get_sql_from_path, _try_get_sql_from_returned_expression
+from pgalchemy.types import format_type, ReturnTypedExpression
 
 
 def sql_function(path: str | None=None, schema=None):
     def wrapper(func: Callable) -> Callable:
-        sig_params = _get_signature_params_sql(func)
-        sql = _try_get_sql_from_returned_expression(func) or _try_get_sql_from_path(path)
-        returns = _try_get_return_from_annotation(func) or _try_get_type_from_returned_expression(func)
+        Function(
+            schema=schema,
+            path=path,
+            sql=_try_get_sql_from_returned_expression(func),
+            returns=_return_type_from_annotation(func) or _return_type_from_result(func),
+            parameters=params(func)
+        )
+        return func
+
+
+class Function:
+    def __init__(self, name, path: str | None=None, sql: str | None = None, schema=None, parameters: Iterable[inspect.Parameter], returns: type):
+        sig_params = ', '.join([_format_arg(arg) for arg in parameters])
+        sql = sql or _try_get_sql_from_path(path)
+        name = name or path.split('/')[-1].split('.')[0]
         PGFunction(
             schema=schema,
-            signature=f"{func.__name__}({sig_params})",
+            signature=f"{name}({sig_params})",
             definition=f"""
-                RETURNS {returns} AS $$
+                RETURNS {returns_for_type(returns)} AS $$
                 BEGIN
                     {sql}
                 END;
                 $$ language 'plpgsql'
             """
         )
-        return func
+
+
 
 def _format_arg(arg):
     main = f'{arg.name} {format_type(arg.annotation)}'
@@ -34,7 +48,28 @@ def _format_arg(arg):
         return main
 
 
-def _get_signature_params_sql(func):
+def params(func):
     sig = inspect.signature(func)
-    args = sig.parameters.values()
-    return ', '.join([_format_arg(arg) for arg in args])
+    return sig.parameters.values()
+
+
+def returns_for_type(annotation):
+    if annotation and get_origin(annotation) is ReturnTypedExpression:
+        return annotation.get_sql_type()
+    elif annotation:
+        return format_type(annotation)
+    else:
+        return None
+
+
+def _return_type_from_annotation(func):
+    return get_type_hints(func)['return']
+
+
+def _return_type_from_result(func):
+    result = func()
+    if result and (isinstance(result, Select) or isinstance(result, BinaryExpression)):
+        raise ValueError("Please wrap your returned expression with a ReturnTypedExpression() so that we have type information to generate your function")
+    if result and isinstance(result, ReturnTypedExpression) and result.expression:
+        return type(result)
+    return None

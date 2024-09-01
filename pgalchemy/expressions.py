@@ -34,23 +34,3 @@ def _try_get_sql_from_returned_expression(func):
     if result and isinstance(result, ReturnTypedExpression):
         return str(result.expression)
     return None
-
-
-def _try_get_return_from_annotation(func):
-    annotation = get_type_hints(func)['return']
-    if annotation and annotation is ReturnTypedExpression:
-        return annotation.get_sql_type()
-    elif annotation:
-        return format_type(annotation)
-    else:
-        return None
-
-
-def _try_get_type_from_returned_expression(func):
-    result = func()
-
-    if result and (isinstance(result, Select) or isinstance(result, BinaryExpression)):
-        raise ValueError("Please wrap your returned expression with a ReturnTypedExpression() so that we have type information to generate your function")
-    if result and isinstance(result, ReturnTypedExpression) and result.expression:
-        return type(result).get_sql_type()
-    return None

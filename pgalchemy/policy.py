@@ -22,14 +22,14 @@ class PolicyCommands(Enum):
 class Policy:
     def __init__(
             self,
-            model: Type[DeclarativeBase] | Table,
+            on: Type[DeclarativeBase] | Table,
             name: str,
             as_: PolicyType = PolicyType.PERMISSIVE,
             for_: PolicyCommands = PolicyCommands.ALL,
             using: str | BinaryExpression | None = None,
             with_check: str | BinaryExpression | None = None
     ):
-        self.model = model
+        self.on = on
         self.name = name
         self.with_check = str(with_check)
         self.using = str(using)

@@ -19,6 +19,7 @@ def sql_view(schema=None, materialized: bool = False):
 class View:
     def __init__(self, name: str, schema, materialized: bool = False, path: str| None = None, sql: str | None = None):
         sql = sql or _try_get_sql_from_path(path)
+        name = name or path.split('/')[-1].split('.')[0]
         if materialized:
             PGMaterializedView(schema=schema, signature=f"{name}", definition=sql)
         else:

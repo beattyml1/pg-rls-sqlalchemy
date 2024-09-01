@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date, time
 from decimal import Decimal
-from typing import get_origin, Optional, get_args, Union, Type, List, Generic, TypeVar
+from typing import get_origin, Optional, get_args, Union, Type, List, Generic, TypeVar, TypeVarTuple
 
 import sqlalchemy
 import sqlalchemy.dialects.postgresql
@@ -9,6 +9,7 @@ from sqlalchemy import Table, Select, Column, BinaryExpression
 from sqlalchemy.orm import DeclarativeBase
 
 T = TypeVar('T')
+Ts = TypeVarTuple('Ts')
 
 
 def format_type(annotation: type):
@@ -79,7 +80,7 @@ def _format_primitive_type(annotation):
         None: 'void',
         type(None): 'void'
     }[annotation]
-
+Union
 
 class ReturnTypedExpression(Generic[T]):
     def __init__(self, expression: Select|BinaryExpression|None):
@@ -87,4 +88,4 @@ class ReturnTypedExpression(Generic[T]):
 
     @classmethod
     def get_sql_type(cls):
-        format_type(get_args(cls)[0])
+        return format_type(get_args(cls)[0])

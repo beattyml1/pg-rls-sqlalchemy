@@ -22,8 +22,10 @@ def format_type(annotation: type):
         return t
     if get_origin(annotation) is list or issubclass(get_origin(annotation), list):
         return f'table({format_type(get_args(annotation)[0])})'
-    if issubclass(annotation, DeclarativeBase) or issubclass(annotation, object):
+    if issubclass(annotation, DeclarativeBase):
         return ', '.join([_format_column(column) for column in annotation.__table__.columns().values()])
+    if issubclass(annotation, object):
+        return ', '.join([f'{k} {format_type(t)}' for k, t in annotation.__annotations__.items()])
     raise ValueError("Invalid type annotation for SQL function generation: Must be: str, bool, int, float, Decimal, datetime, date, time, or a Optional or Union with None of those types")
 
 

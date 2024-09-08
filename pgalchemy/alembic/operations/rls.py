@@ -38,7 +38,7 @@ class DisableRlsOp(MigrateOperation):
 
     def reverse(self):
         # only needed to support autogenerate
-        return EnableRlsOp(self.sequence_name, schema=self.schema)
+        return EnableRlsOp(self.table_name, schema=self.schema)
 
 @Operations.implementation_for(EnableRlsOp)
 def enable_rls(operations, operation: EnableRlsOp):

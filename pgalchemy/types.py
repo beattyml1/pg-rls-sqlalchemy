@@ -7,6 +7,7 @@ import sqlalchemy
 import sqlalchemy.dialects.postgresql
 from sqlalchemy import Table, Select, Column, BinaryExpression
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.sql.elements import KeyedColumnElement
 
 T = TypeVar('T')
 Ts = TypeVarTuple('Ts')
@@ -20,12 +21,16 @@ def format_type(annotation: type):
     if get_origin(annotation) is Union:
         t = _format_union_type(annotation)
         return t
+    if get_origin(annotation) is list or issubclass(get_origin(annotation), list):
+        return f'table({format_type(get_args(annotation)[0])})'
     if issubclass(annotation, DeclarativeBase):
         return ', '.join([_format_column(column) for column in annotation.__table__.columns().values()])
+    if issubclass(annotation, object):
+        return ', '.join([f'{k} {format_type(t)}' for k, t in annotation.__annotations__.items()])
     raise ValueError("Invalid type annotation for SQL function generation: Must be: str, bool, int, float, Decimal, datetime, date, time, or a Optional or Union with None of those types")
 
 
-def _format_column(column: Column):
+def _format_column(column: KeyedColumnElement):
     return f'{column.name} {format_type(column.type)} {"not null" if column.nullable is False else "null"}'
 
 def _format_type_for_select(annotation: Type[Select]) -> str:

@@ -1,10 +1,11 @@
 from alembic.autogenerate import comparators
-from alembic.operations import Operations, MigrateOperation
-from sqlalchemy import Table
+from sqlalchemy import Table, Column
 
-from ..rls import RlsData
+from .column_privilege import ColumnPrivilege
 from .operations import EnableRlsOp, DisableRlsOp
-from .. import Policy
+from .operations.cls import ColGrantOp
+from ..cls import column_is_managed
+from ..rls import RlsData
 
 
 @comparators.dispatch_for("table")
@@ -37,3 +38,24 @@ def get_table_rls_data(autogen_context, schemaname, tablename):
     db_table = results.fetchone()
     rls_enabled_db = db_table['relrowsecurity'] if db_table is not None else None
     return db_table, rls_enabled_db
+
+
+
+@comparators.dispatch_for("column")
+def compare_cls(autogen_context, modify_ops, schemaname, tablename, colname, conn_table, metadata_column: Column):
+    GrantRevoke, Op, Role = str, str, str
+    code_privileges: list[(GrantRevoke, Op, Role)] = metadata_column.info.get('cls')
+    db_privileges = ColumnPrivilege.get_for_column(autogen_context.connection, schemaname, tablename, colname)
+
+    compare_cls(modify_ops, code_privileges, db_privileges, schemaname, tablename, colname, metadata_column)
+
+
+def compare_cls_enabled(modify_ops, code_privileges: list[(str, str, str)], db_privileges: list[ColumnPrivilege], schemaname, tablename, colname, metadata_column):
+    for (grant_revoke, op, role) in code_privileges:
+        exists = any(x.is_same(op, role) for x in db_privileges)
+        managed = column_is_managed(role, column=metadata_column)
+        if managed:
+            if grant_revoke == 'GRANT' and not exists:
+                modify_ops.append(ColGrantOp(table_name=tablename, operation=op, column=colname, schema=schemaname))
+            elif grant_revoke == 'REVOKE' and exists:
+                modify_ops.append(ColGrantOp(table_name=tablename, operation=op, column=colname, schema=schemaname))
